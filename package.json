@@ -1,0 +1,33 @@
+{
+  "name": "e-portal",
+  "version": "1.0.0",
+  "description": "A mini school portal",
+  "main": "server.js",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Phran6ix/E-portal.git"
+  },
+  "author": "Olatinwo Francis",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Phran6ix/E-portal/issues"
+  },
+  "homepage": "https://github.com/Phran6ix/E-portal#readme",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.2",
+    "express": "^4.18.1",
+    "express-validator": "^6.14.2",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.5.4",
+    "validator": "^13.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.19",
+    "prettier": "2.7.1"
+  }
+}
