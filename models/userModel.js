@@ -1,6 +1,7 @@
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
+const Dept = require("./deptModel");
 
 const userSchema = new Schema({
   firstName: {
@@ -49,6 +50,9 @@ const userSchema = new Schema({
       message: "passwords are not the same",
     },
   },
+  department: {
+    type: String,
+  },
   profilePhoto: {
     type: String,
     default: "default.jpg",
@@ -67,6 +71,12 @@ userSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, 13);
   this.confirmPassword = undefined;
 });
+
+// userSchema.post("save", async function () {
+//   const dept = await Dept.findOne(this.department);
+
+//   console.log(dept);
+// });
 
 userSchema.methods.comparePassword = async function (
   inputPassword,
