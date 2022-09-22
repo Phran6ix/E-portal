@@ -33,7 +33,7 @@ const userSchema = new Schema({
       values: ["student", "coordinator", "admin"],
       message: "Invalid input",
     },
-    default: "student",
+    required: [true],
   },
   password: {
     type: String,
@@ -53,6 +53,20 @@ const userSchema = new Schema({
   department: {
     type: String,
   },
+  part: {
+    type: String,
+  },
+  courses: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+      unique: true,
+      grade: {
+        type: String,
+        default: "N/A",
+      },
+    },
+  ],
   profilePhoto: {
     type: String,
     default: "default.jpg",

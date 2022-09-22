@@ -9,6 +9,10 @@ const generateJWT = function (id) {
 };
 
 exports.signup = catchAsync(async (req, res, next) => {
+  if (req.body.role !== "student") {
+    return next(new AppError("You are not authorized for this operation", 404));
+  }
+
   const user = await User.create({
     firstName: req.body.firstname,
     lastName: req.body.lastname,
@@ -20,6 +24,7 @@ exports.signup = catchAsync(async (req, res, next) => {
     confirmPassword: req.body.confirmpassword,
     profilePhoto: req.body.photo,
   });
+
   const token = generateJWT(user.id);
 
   res.status(201).json({

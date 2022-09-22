@@ -9,16 +9,28 @@ const router = express.Router();
 router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 
-router.get(
-  "/",
-  authController.protect,
-  authController.restrictTo("coordinator"),
-  userController.getAllUsers
-);
+router.use(authController.protect);
+// router.get(
+//   "/",
+//   authController.restrictTo("coordinator", "admin"),
+//   userController.getAllUsers
+// );
 
-router.patch(
-  "/updateDept",
-  authController.protect,
-  deptController.updateDepartment
+router
+  .route(":/id")
+  .get(
+    authController.restrictTo("coordinator", "admin"),
+    userController.getAUser
+  );
+
+router.use(authController.restrictTo("student"));
+router.get(
+  "/displaycourses",
+  authController.restrictTo("student"),
+  userController.displayCourses
 );
+router.patch("/registercourses", userController.registerCourses);
+router.patch("/selectDept", deptController.selectDepartment);
+router.patch("/updateMe", userController.updateMe);
+
 module.exports = router;

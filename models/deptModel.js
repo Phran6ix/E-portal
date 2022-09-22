@@ -1,14 +1,29 @@
-const { Schema, model } = require("mongoose");
+const { Schema, model, SchemaType } = require("mongoose");
 
 const deptSchema = new Schema({
   name: {
     type: String,
     required: [true, "A department must have a name"],
+    unique: true,
   },
-  students: [
+
+  part: [
     {
-      type: Schema.Types.ObjectId,
-      ref: "User",
+      part: {
+        type: String,
+      },
+      students: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "User",
+        },
+      ],
+      courses: [
+        {
+          type: Schema.Types.ObjectId,
+          ref: "Courses",
+        },
+      ],
     },
   ],
 });
