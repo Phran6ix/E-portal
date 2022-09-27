@@ -1,7 +1,6 @@
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
 const validator = require("validator");
-const Dept = require("./deptModel");
 
 const userSchema = new Schema({
   firstName: {
@@ -18,55 +17,56 @@ const userSchema = new Schema({
   },
   matric: {
     type: String,
-    required: [true, "Input your matric number"],
-    unique: true,
+  },
+  staffId: {
+    type: String,
   },
   email: {
     type: String,
     required: [true, "input your email"],
     validate: [validator.isEmail, "input a valid email"],
-    unique: true,
+    unique: [true, "Email already taken"],
   },
+  courses: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Course",
+    },
+  ],
+  results: [
+    {
+      code: {
+        type: String,
+      },
+      title: {
+        type: String,
+      },
+      grade: {
+        type: String,
+      },
+    },
+  ],
   role: {
     type: String,
     enum: {
       values: ["student", "coordinator", "admin"],
       message: "Invalid input",
     },
-    required: [true],
+    default: "student",
   },
   password: {
     type: String,
     required: [true, "input password"],
     select: false,
   },
-  confirmPassword: {
-    type: String,
-    required: true,
-    validate: {
-      validator: function (el) {
-        return el === this.password;
-      },
-      message: "passwords are not the same",
-    },
-  },
+
   department: {
     type: String,
   },
   part: {
     type: String,
   },
-  courses: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Course",
-      unique: true,
-      grade: {
-        type: String,
-        default: "N/A",
-      },
-    },
-  ],
+
   profilePhoto: {
     type: String,
     default: "default.jpg",
@@ -80,17 +80,6 @@ const userSchema = new Schema({
 userSchema.virtual("fullname").get(function () {
   return this.firstName + " " + this.lastName;
 });
-
-userSchema.pre("save", async function () {
-  this.password = await bcrypt.hash(this.password, 13);
-  this.confirmPassword = undefined;
-});
-
-// userSchema.post("save", async function () {
-//   const dept = await Dept.findOne(this.department);
-
-//   console.log(dept);
-// });
 
 userSchema.methods.comparePassword = async function (
   inputPassword,

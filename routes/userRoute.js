@@ -10,27 +10,57 @@ router.post("/signup", authController.signup);
 router.post("/login", authController.login);
 
 router.use(authController.protect);
-// router.get(
-//   "/",
-//   authController.restrictTo("coordinator", "admin"),
-//   userController.getAllUsers
-// );
 
-router
-  .route(":/id")
-  .get(
-    authController.restrictTo("coordinator", "admin"),
-    userController.getAUser
-  );
+router.get(
+  "/",
+  authController.restrictTo("coordinator", "admin"),
+  userController.getAllUsers
+);
 
-router.use(authController.restrictTo("student"));
+router.post(
+  "/newAdmin",
+  authController.restrictTo("admin"),
+  userController.createAdminAccount
+);
+
+router.get(
+  "/courseregstudent",
+  authController.restrictTo("coordinator"),
+  userController.findCourseStudents
+);
+
 router.get(
   "/displaycourses",
   authController.restrictTo("student"),
   userController.displayCourses
 );
-router.patch("/registercourses", userController.registerCourses);
-router.patch("/selectDept", deptController.selectDepartment);
-router.patch("/updateMe", userController.updateMe);
+
+router.patch(
+  "/registercourses",
+  authController.restrictTo("student"),
+  userController.registerCourses
+);
+router.patch(
+  "/selectDept",
+  authController.restrictTo("student"),
+  deptController.selectDepartment
+);
+router.patch(
+  "/updateMe",
+  authController.restrictTo("student"),
+  userController.updateMe
+);
+
+router.patch(
+  "/gradeResult",
+  authController.restrictTo("coordinator", "admin"),
+  userController.gradeCourses
+);
+
+router.get(
+  "/:id",
+  authController.restrictTo("coordinator", "admin"),
+  userController.getAUser
+);
 
 module.exports = router;

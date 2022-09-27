@@ -11,6 +11,13 @@ const courseSchema = new Schema({
     required: [true, "Input the course code"],
     unique: [true, "Course code already exist"],
   },
+  unit: {
+    type: Number,
+  },
+  grade: {
+    type: String,
+    default: "N/A",
+  },
   department: {
     type: String,
   },

@@ -43,6 +43,7 @@ exports.partCourses = catchAsync(async (req, res, next) => {
   const course = await Course.create({
     title: req.body.title,
     code: req.body.code,
+    unit: req.body.unit,
   });
 
   const id = req.params.dept;
@@ -156,10 +157,7 @@ exports.selectDepartment = catchAsync(async (req, res, next) => {
   await dept.save();
 
   res.status(200).json({
-    status: "Success",
-    data: {
-      dept,
-    },
+    status: "Update Successful",
   });
 });
 

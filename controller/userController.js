@@ -6,10 +6,10 @@ const AppError = require("../utils/appError");
 const { partCourses } = require("./deptController");
 
 exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find();
+  const users = await User.find({ role: "student" });
 
   res.status(200).json({
-    status: "sucess",
+    status: "success",
     range: users.length,
     data: {
       users,
@@ -17,9 +17,16 @@ exports.getAllUsers = catchAsync(async (req, res, next) => {
   });
 });
 exports.getAUser = catchAsync(async (req, res, next) => {
-  const user = await User.findOne({ _id: req.params.id }).populate({
+  const user = await User.findOne({
+    _id: req.params.id,
+  }).populate({
     path: "courses",
+    select: "firstName lastName title code grade unit",
   });
+
+  if (!user) {
+    return next(new AppError("Document not found", 404));
+  }
 
   res.status(200).json({
     status: "successful",
@@ -57,7 +64,7 @@ exports.displayCourses = catchAsync(async (req, res, next) => {
     populate: {
       path: "courses",
       model: "Course",
-      select: "title code -_id",
+      select: "title code _id",
     },
   });
 
@@ -120,14 +127,87 @@ exports.registerCourses = catchAsync(async (req, res, next) => {
     courseID.push(toUpload._id);
   }
 
-  const user = await User.findByIdAndUpdate(req.user.id, {
-    courses: courseID,
-  }).select("firstName lastName matric courses department part");
+  let user = await req.user.populate("courses");
+
+  user.courses = courseID;
+
+  await user.save({ validateBeforeSave: false });
 
   res.status(200).json({
     status: "Successful",
+  });
+});
+
+exports.createAdminAccount = catchAsync(async (req, res, next) => {
+  const admin = await User.create({
+    firstName: req.body.firstname,
+    lastName: req.body.lastname,
+    middleName: req.body.middlename,
+    email: req.body.email,
+    role: req.body.role,
+    staffId: req.body.staffId,
+    department: req.body.department,
+    password: req.body.password,
+    confirmPassword: req.body.confirmpassword,
+  });
+
+  res.status(201).json({
+    status: "Successful",
     data: {
-      user,
+      admin,
     },
+  });
+});
+
+exports.findCourseStudents = catchAsync(async (req, res, next) => {
+  const student = await User.find({ role: "student" }).populate({
+    path: "courses",
+    select: "title code grade ",
+  });
+
+  let registeredStudents = student
+    .filter((stu) => {
+      let stuCourses = stu.courses;
+
+      return stuCourses.find((course) => {
+        return course.code === req.body.code;
+      });
+    })
+    .map((stu) => {
+      return stu.matric;
+    });
+
+  res.status(200).json({
+    status: "Success",
+    data: {
+      registeredStudents,
+    },
+  });
+});
+
+exports.gradeCourses = catchAsync(async (req, res, next) => {
+  const matric = req.body.matric;
+  const user = await User.findOne({ matric }).populate("courses");
+  if (!user) {
+    return next(new AppError("Invalid Matric number, try again", 404));
+  }
+
+  //  find the course to grade
+  const Gcourse = user.courses.find((course) => {
+    return course.code === req.body.coursecode;
+  });
+
+  const updateResult = {
+    code: Gcourse.code,
+    title: Gcourse.title,
+    grade: req.body.score,
+  };
+
+  user.results.push(updateResult);
+  console.log(user.results);
+
+  await user.save();
+  res.status(200).json({
+    status: "Successful",
   });
 });
