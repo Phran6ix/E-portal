@@ -6,11 +6,7 @@ const deptController = require("../controller/deptController");
 
 const router = express.Router();
 
-router.post("/signup", authController.signup);
-router.post("/login", authController.login);
-
 router.use(authController.protect);
-
 router.get(
   "/",
   authController.restrictTo("coordinator", "admin"),
@@ -50,6 +46,13 @@ router.patch(
   authController.restrictTo("student"),
   userController.updateMe
 );
+router.get(
+  "/checkResult",
+  authController.restrictTo("student"),
+  userController.checkResult
+);
+
+router.patch("/updatepassword", authController.updatePassword);
 
 router.patch(
   "/gradeResult",

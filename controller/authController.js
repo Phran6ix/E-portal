@@ -3,7 +3,10 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/userModel");
 const AppError = require("../utils/appError");
 const bcrypt = require("bcrypt");
+const crypto = require("crypto");
 const catchAsync = require("../utils/catchAsync");
+const { findOne } = require("../models/userModel");
+const Email = require("../utils/email");
 
 const generateJWT = function (id) {
   return jwt.sign(id, process.env.JWT_SECRET);
@@ -88,7 +91,7 @@ exports.protect = catchAsync(async (req, res, next) => {
   }
 
   const decodeUser = jwt.verify(token, process.env.JWT_SECRET);
-  const currentUser = await User.findById(decodeUser);
+  const currentUser = await User.findById(decodeUser).select("+password");
 
   if (!currentUser) {
     return next(new AppError("Invalid Token, login again ", 400));
@@ -100,9 +103,92 @@ exports.protect = catchAsync(async (req, res, next) => {
 exports.restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      console.log(roles);
       return next(new AppError("You Do not have Access ", 400));
     }
     next();
   };
 };
+
+exports.updatePassword = catchAsync(async (req, res, next) => {
+  const user = req.user;
+  if (!(await bcrypt.compare(req.body.password, user.password))) {
+    return next(new AppError("Invalid password", 404));
+  }
+
+  if (!(req.body.newPassword === req.body.confirmPassword)) {
+    return next(new AppError("Passwords are not the same", 404));
+  }
+  user.password = await hashPassword(req.body.newPassword);
+
+  await user.save();
+
+  res.status(200).json({
+    status: "success",
+  });
+});
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  const email = req.body.email;
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = await crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+
+  user.resetPasswordToken = hashedToken;
+  await user.save();
+
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/api/auth/resetpassword/${resetToken}`;
+
+  // await sendEmail("Your reset Password Token", hashedToken);
+  await new Email(user, "Reset Password").send(
+    "Reset password",
+    `
+   Click the link to reset your password ${resetUrl}`
+  );
+
+  try {
+    res.status(200).json({
+      status: "success",
+      message: "Email Sent",
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: "fail",
+      message: "Error in sending email",
+    });
+  }
+});
+
+exports.resetPassword = catchAsync(async (req, res, next) => {
+  const hashedToken = await crypto
+    .createHash("sha256")
+    .update(req.params.resetToken)
+    .digest("hex");
+
+  const user = await User.findOne({
+    resetPasswordToken: hashedToken,
+  });
+  if (!user) {
+    return next(new AppError("Invalid token", 400));
+  }
+
+  if (req.body.newPassword !== req.body.confirmPassword) {
+    return next(new AppError("Passwords are not the same", 400));
+  }
+
+  user.password = req.body.newPassword;
+  await user.save();
+
+  res.status(200).json({
+    status: "Update successful",
+  });
+});

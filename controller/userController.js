@@ -38,6 +38,11 @@ exports.getAUser = catchAsync(async (req, res, next) => {
 
 exports.updateMe = catchAsync(async (req, res, next) => {
   const id = req.user._id;
+  if (req.body.password) {
+    return next(
+      new AppError("Invalid request, please use the correct route", 400)
+    );
+  }
 
   const user = await User.findByIdAndUpdate(id, {
     firstName: req.body.firstname,
@@ -204,10 +209,17 @@ exports.gradeCourses = catchAsync(async (req, res, next) => {
   };
 
   user.results.push(updateResult);
-  console.log(user.results);
 
   await user.save();
   res.status(200).json({
     status: "Successful",
+  });
+});
+
+exports.checkResult = catchAsync(async (req, res, next) => {
+  const user = req.user;
+  res.status(200).json({
+    status: "success",
+    results: user.results,
   });
 });
