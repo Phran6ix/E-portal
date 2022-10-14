@@ -7,6 +7,8 @@ const deptController = require("../controller/deptController");
 const router = express.Router();
 
 router.use(authController.protect);
+router.patch("/uploadprofilephoto", userController.uploadProfilePhoto);
+
 router.get(
   "/",
   authController.restrictTo("coordinator", "admin"),
@@ -44,6 +46,7 @@ router.patch(
 router.patch(
   "/updateMe",
   authController.restrictTo("student"),
+  userController.getMe,
   userController.updateMe
 );
 router.get(

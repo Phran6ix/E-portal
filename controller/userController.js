@@ -1,77 +1,33 @@
 const mongoose = require("mongoose");
+const multer = require("multer");
+
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/userModel");
+const factory = require("../controller/handlerFactory");
 const Dept = require("../models/deptModel");
 const AppError = require("../utils/appError");
 const { partCourses } = require("./deptController");
 
-exports.getAllUsers = catchAsync(async (req, res, next) => {
-  const users = await User.find({ role: "student" });
+exports.getAllUsers = factory.getDocuments(User);
 
-  res.status(200).json({
-    status: "success",
-    range: users.length,
-    data: {
-      users,
-    },
-  });
-});
-exports.getAUser = catchAsync(async (req, res, next) => {
-  const user = await User.findOne({
-    _id: req.params.id,
-  }).populate({
-    path: "courses",
-    select: "firstName lastName title code grade unit",
-  });
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next;
+};
 
-  if (!user) {
-    return next(new AppError("Document not found", 404));
-  }
-
-  res.status(200).json({
-    status: "successful",
-    data: {
-      user,
-    },
-  });
+exports.getAUser = factory.getADocument(User, {
+  path: "courses",
+  select: "firstName lastName title code grade unit",
 });
 
-exports.updateMe = catchAsync(async (req, res, next) => {
-  const id = req.user._id;
-  if (req.body.password) {
-    return next(
-      new AppError("Invalid request, please use the correct route", 400)
-    );
-  }
+exports.updateMe = factory.updateADocument(
+  User,
 
-  const user = await User.findByIdAndUpdate(id, {
-    firstName: req.body.firstname,
-    lastName: req.body.lastname,
-    email: req.body.email,
-    department: req.body.department,
-  }).select("+department");
-
-  if (!user) {
-    return next(new AppError("An Error Occunred", 400));
-  }
-
-  res.status(201).json({
-    status: "Success",
-    data: {
-      user,
-    },
-  });
-});
+  "+department"
+);
 
 exports.displayCourses = catchAsync(async (req, res, next) => {
-  const dept = await Dept.findOne({ name: req.user.department }).populate({
-    path: "part",
-    populate: {
-      path: "courses",
-      model: "Course",
-      select: "title code _id",
-    },
-  });
+  const dept = await Dept.findOne({ name: req.user.department });
 
   // console.log(req.user);
 
@@ -223,3 +179,20 @@ exports.checkResult = catchAsync(async (req, res, next) => {
     results: user.results,
   });
 });
+
+const memoryStorage = multer.memoryStorage();
+
+function multerFilter(req, file, cb) {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new AppError("please upload an image", 400), false);
+  }
+}
+
+const upload = multer({
+  storage: memoryStorage,
+  fileFilter: multerFilter,
+});
+
+exports.uploadProfilePhoto = upload.single("profile");

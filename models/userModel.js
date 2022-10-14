@@ -43,6 +43,7 @@ const userSchema = new Schema({
       },
       grade: {
         type: String,
+        default: "N/A",
       },
     },
   ],
@@ -87,6 +88,13 @@ userSchema.methods.comparePassword = async function (
 ) {
   return await bcrypt.compare(inputPassword, userPassword);
 };
+
+userSchema.pre(/^findOne/, function () {
+  this.populate({
+    path: "courses",
+    select: "firstName lastName title code grade unit",
+  });
+});
 
 const User = model("User", userSchema);
 module.exports = User;

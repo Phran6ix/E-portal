@@ -28,6 +28,17 @@ const deptSchema = new Schema({
   ],
 });
 
+deptSchema.pre(/^findOne/, function () {
+  this.populate({
+    path: "part",
+    populate: {
+      path: "courses",
+      model: "Course",
+      select: "title code -_id -__v",
+    },
+  }).select("name part");
+});
+
 const Dept = new model("Dept", deptSchema);
 
 module.exports = Dept;

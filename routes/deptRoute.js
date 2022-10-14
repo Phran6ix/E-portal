@@ -12,7 +12,7 @@ router.patch(
   deptController.createPartDept
 );
 router.get(
-  "/:dept",
+  "/:id",
   authController.restrictTo("coordinator", "admin"),
   deptController.getADept
 );
@@ -23,9 +23,10 @@ router.get(
 );
 
 router.use(authController.restrictTo("admin"));
-router.post("/createDept", deptController.createDept);
 router.patch("/removestudent", deptController.removeStudent);
+router.post("/createDept", deptController.createDept);
 router.patch("/:id", deptController.updateDepartment);
+router.delete("/deletedepartment/:id", deptController.deleteDepartment);
 router.patch("/updatepart/:dept", deptController.createPartDept);
 router.patch("/updatecourses/:dept/:part", deptController.partCourses);
 

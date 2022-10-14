@@ -1,19 +1,16 @@
 const Dept = require("../models/deptModel");
 const User = require("../models/userModel");
 const Course = require("../models/courseModel");
+const factory = require("../controller/handlerFactory");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
 
-exports.createDept = catchAsync(async (req, res, next) => {
-  const department = await Dept.create(req.body);
+exports.getAllDepts = factory.getDocuments(Dept);
+exports.getADept = factory.getADocument(Dept);
 
-  res.status(201).json({
-    status: "Successful created",
-    data: {
-      department,
-    },
-  });
-});
+exports.createDept = factory.createADocument(Dept);
+exports.updateDepartment = factory.updateADocument();
+exports.deleteDepartment = factory.deleteADocument(Dept);
 
 exports.createPartDept = catchAsync(async (req, res, next) => {
   const id = req.params.dept;
@@ -72,60 +69,6 @@ exports.partCourses = catchAsync(async (req, res, next) => {
     status: "Uploaded Successful",
     data: {
       course,
-    },
-  });
-});
-
-exports.getAllDepts = catchAsync(async (req, res, next) => {
-  const depts = await Dept.find().select("-students");
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      depts,
-    },
-  });
-});
-
-exports.getADept = catchAsync(async (req, res, next) => {
-  const id = req.params.dept;
-
-  const department = await Dept.findById(id).populate({
-    path: "part",
-    populate: {
-      path: "courses",
-      model: "Course",
-      select: "-_id -__v ",
-    },
-  });
-
-  if (!department) {
-    return next(new AppError("Not Found", 404));
-  }
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      department,
-    },
-  });
-});
-
-exports.updateDepartment = catchAsync(async (req, res, next) => {
-  const id = req.params.id;
-
-  const department = await Dept.findByIdAndUpdate(id, req.body).select(
-    "-students"
-  );
-
-  if (!department) {
-    return next(new AppError("An Error Occured", 400));
-  }
-
-  res.status(201).json({
-    status: "Update Successful",
-    data: {
-      department,
     },
   });
 });
